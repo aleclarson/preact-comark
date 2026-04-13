@@ -60,37 +60,6 @@ export interface ComarkProps {
   className?: string
 }
 
-/**
- * Comark component
- *
- * Async server component that parses markdown on the server and renders it.
- * When `streaming` is true, delegates to ComarkClient for client-side re-rendering.
- *
- * @example
- * ```tsx
- * import { Comark } from 'preact-comark'
- * import CustomHeading from './CustomHeading'
- *
- * const customComponents = {
- *   h1: CustomHeading,
- *   alert: AlertComponent,
- * }
- *
- * export default function App() {
- *   const content = `
- *     # Hello World
- *
- *     This is a **markdown** document with *Comark* components.
- *
- *     ::alert{type="info"}
- *     This is an alert component
- *     ::
- *   `
- *
- *   return <Comark markdown={content} components={customComponents} />
- * }
- * ```
- */
 const EMPTY_OPTIONS: ComarkOptions = {}
 const EMPTY_PLUGINS: ComarkPlugins = []
 
@@ -177,6 +146,34 @@ function ResolvedComark({
   )
 }
 
+/**
+ * Parse markdown and render it into Preact elements.
+ *
+ * Uses Suspense for non-streaming parsing and switches to `ComarkClient`
+ * when `streaming` is enabled.
+ *
+ * @example
+ * ```tsx
+ * import type { ComponentChildren } from 'preact'
+ * import { Comark } from 'preact-comark'
+ *
+ * function Alert({ children }: { children?: ComponentChildren }) {
+ *   return <aside>{children}</aside>
+ * }
+ *
+ * const markdown = `
+ * # Hello World
+ *
+ * ::alert
+ * This is a custom component block.
+ * ::
+ * `
+ *
+ * export function Article() {
+ *   return <Comark markdown={markdown} components={{ alert: Alert }} />
+ * }
+ * ```
+ */
 export function Comark({
   children,
   markdown = '',

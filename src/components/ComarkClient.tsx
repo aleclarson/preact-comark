@@ -6,6 +6,16 @@ import type { ComarkTree } from 'comark'
 import { ComarkRenderer } from './ComarkRenderer'
 import type { ComarkProps } from './Comark'
 
+/**
+ * Client-side parser used by `Comark` when `streaming` is enabled.
+ *
+ * Keeps the previous parsed tree visible while the next parse is pending so
+ * incremental markdown updates do not flash blank content.
+ *
+ * @remarks
+ * This is primarily an advanced escape hatch. Most apps should use `Comark`
+ * with `streaming` instead of calling `ComarkClient` directly.
+ */
 export function ComarkClient({
   children,
   markdown = '',

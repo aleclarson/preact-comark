@@ -24,7 +24,7 @@
     "demo:build": "vite build --config demo/vite.config.mjs",
     "format": "oxfmt .",
     "lint": "oxlint src",
-    "typecheck": "tsc --noEmit && tsc -p test --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p test --noEmit && tsc -p examples --noEmit",
     "test": "vitest",
     "prepublishOnly": "pnpm build"
   },

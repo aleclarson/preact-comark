@@ -29,20 +29,20 @@ interface DefineComarkComponentOptions extends ParseOptions {
  *
  * @example
  * ```tsx
+ * import type { ComponentChildren } from 'preact'
  * import { defineComarkComponent } from 'preact-comark'
- * import highlight from 'preact-comark/plugins/highlight'
- * import toc from 'preact-comark/plugins/toc'
  *
- * const BaseComark = defineComarkComponent({
- *   name: 'BaseComark',
- *   plugins: [highlight({ themes: { light: githubLight, dark: githubDark } })],
- * })
+ * function Alert({ children }: { children?: ComponentChildren }) {
+ *   return <aside>{children}</aside>
+ * }
  *
  * export const ArticleComark = defineComarkComponent({
  *   name: 'ArticleComark',
- *   extends: BaseComark,
- *   plugins: [toc({ depth: 3 })],
+ *   className: 'article-markdown',
+ *   components: { alert: Alert },
  * })
+ *
+ * // <ArticleComark markdown={'::alert\nHello\n::'} />
  * ```
  */
 export function defineComarkComponent(config: DefineComarkComponentOptions = {}) {
@@ -102,18 +102,20 @@ interface DefineComarkRendererOptions {
  *
  * @example
  * ```tsx
+ * import type { ComponentChildren } from 'preact'
  * import { defineComarkRendererComponent } from 'preact-comark'
- * import Alert from './Alert'
- * import CodeBlock from './CodeBlock'
+ * import type { ComarkTree } from 'preact-comark'
  *
- * export const ArticleRenderer = defineComarkRendererComponent({
+ * function Alert({ children }: { children?: ComponentChildren }) {
+ *   return <aside>{children}</aside>
+ * }
+ *
+ * const ArticleRenderer = defineComarkRendererComponent({
  *   name: 'ArticleRenderer',
- *   components: { alert: Alert, pre: CodeBlock },
+ *   components: { alert: Alert },
  * })
  *
- * // In a Server Component:
- * export default async function Page() {
- *   const tree = await parse(markdown)
+ * export function Preview({ tree }: { tree: ComarkTree }) {
  *   return <ArticleRenderer tree={tree} />
  * }
  * ```
