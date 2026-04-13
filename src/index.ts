@@ -1,4 +1,4 @@
-import React from 'react'
+import { createElement, type ComponentType, type FunctionComponent } from 'preact'
 import { Comark } from './components/Comark'
 import { ComarkRenderer } from './components/ComarkRenderer'
 import type { ComarkProps } from './components/Comark'
@@ -12,10 +12,10 @@ export type * from 'comark'
 
 interface DefineComarkComponentOptions extends ParseOptions {
   /** Extend an existing defined component — inherits its plugins and components. */
-  extends?: React.FC<ComarkProps>
-  /** Display name shown in React DevTools. */
+  extends?: FunctionComponent<ComarkProps>
+  /** Display name shown in Preact DevTools. */
   name?: string
-  components?: Record<string, React.ComponentType<any>>
+  components?: Record<string, ComponentType<any>>
   /**
    * Additional classes for the wrapper div
    */
@@ -29,9 +29,9 @@ interface DefineComarkComponentOptions extends ParseOptions {
  *
  * @example
  * ```tsx
- * import { defineComarkComponent } from '@comark/react'
- * import highlight from '@comark/react/plugins/highlight'
- * import toc from '@comark/react/plugins/toc'
+ * import { defineComarkComponent } from 'preact-comark'
+ * import highlight from 'preact-comark/plugins/highlight'
+ * import toc from 'preact-comark/plugins/toc'
  *
  * const BaseComark = defineComarkComponent({
  *   name: 'BaseComark',
@@ -48,8 +48,8 @@ interface DefineComarkComponentOptions extends ParseOptions {
 export function defineComarkComponent(config: DefineComarkComponentOptions = {}) {
   const { name, components: configComponents = {}, className: configClassName, extends: BaseComponent, ...parseOptions } = config
 
-  const ComarkComponent: React.FC<ComarkProps> = (props) => {
-    const mergedOptions: Exclude<ParseOptions, 'plugins'> = {
+  const ComarkComponent: FunctionComponent<ComarkProps> = (props) => {
+    const mergedOptions: Omit<ParseOptions, 'plugins'> = {
       ...parseOptions,
       ...props.options,
     }
@@ -66,7 +66,7 @@ export function defineComarkComponent(config: DefineComarkComponentOptions = {})
 
     const mergedClassName = [configClassName, props.className].filter(Boolean).join(' ') || undefined
 
-    return React.createElement(BaseComponent ?? Comark, {
+    return createElement(BaseComponent ?? Comark, {
       ...props,
       options: mergedOptions,
       plugins: mergedPlugins,
@@ -82,10 +82,10 @@ export function defineComarkComponent(config: DefineComarkComponentOptions = {})
 
 interface DefineComarkRendererOptions {
   /** Extend an existing defined renderer — inherits its component mappings. */
-  extends?: React.FC<ComarkRendererProps>
-  /** Display name shown in React DevTools. */
+  extends?: FunctionComponent<ComarkRendererProps>
+  /** Display name shown in Preact DevTools. */
   name?: string
-  components?: Record<string, React.ComponentType<any>>
+  components?: Record<string, ComponentType<any>>
   /**
    * Additional classes for the wrapper div
    */
@@ -102,7 +102,7 @@ interface DefineComarkRendererOptions {
  *
  * @example
  * ```tsx
- * import { defineComarkRendererComponent } from '@comark/react'
+ * import { defineComarkRendererComponent } from 'preact-comark'
  * import Alert from './Alert'
  * import CodeBlock from './CodeBlock'
  *
@@ -121,7 +121,7 @@ interface DefineComarkRendererOptions {
 export function defineComarkRendererComponent(config: DefineComarkRendererOptions = {}) {
   const { name, components: configComponents = {}, className: configClassName, extends: BaseComponent } = config
 
-  const RendererComponent: React.FC<ComarkRendererProps> = (props) => {
+  const RendererComponent: FunctionComponent<ComarkRendererProps> = (props) => {
     const mergedComponents = {
       ...configComponents,
       ...props.components,
@@ -129,7 +129,7 @@ export function defineComarkRendererComponent(config: DefineComarkRendererOption
 
     const mergedClassName = [configClassName, props.className].filter(Boolean).join(' ') || undefined
 
-    return React.createElement(BaseComponent ?? ComarkRenderer, {
+    return createElement(BaseComponent ?? ComarkRenderer, {
       ...props,
       components: mergedComponents,
       className: mergedClassName,

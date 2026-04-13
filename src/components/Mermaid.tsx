@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'preact/hooks'
 import { renderMermaidSVG, THEMES, type DiagramColors } from 'beautiful-mermaid'
 import type { ThemeNames } from 'comark/plugins/mermaid'
 

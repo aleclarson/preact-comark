@@ -1,36 +1,10 @@
 'use client'
 
-import { use, useDeferredValue, useMemo, Suspense } from 'react'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { parse } from 'comark'
 import type { ComarkTree } from 'comark'
 import { ComarkRenderer } from './ComarkRenderer'
 import type { ComarkProps } from './Comark'
-
-interface ComarkContentProps extends Omit<ComarkProps, 'markdown' | 'children' | 'options' | 'plugins'> {
-  parsePromise: Promise<ComarkTree>
-}
-
-function ComarkContent({
-  parsePromise,
-  components: customComponents = {},
-  componentsManifest,
-  streaming = false,
-  caret = false,
-  className,
-}: ComarkContentProps) {
-  const parsed = use(parsePromise)
-
-  return (
-    <ComarkRenderer
-      tree={parsed}
-      components={customComponents}
-      componentsManifest={componentsManifest}
-      streaming={streaming}
-      className={className}
-      caret={caret}
-    />
-  )
-}
 
 export function ComarkClient({
   children,
@@ -41,20 +15,48 @@ export function ComarkClient({
 }: ComarkProps) {
   const content = children ? String(children) : markdown
 
-  // Re-creates the promise only when content changes.
-  // Note: options/plugins should be stable references (defined outside render or memoized).
-  const parsePromise = useMemo(
-    () => parse(content, { ...options, plugins }),
-    [content],
-  )
+  const [parsed, setParsed] = useState<ComarkTree | null>(null)
+  const [error, setError] = useState<unknown>(null)
+  const requestId = useRef(0)
 
-  // Keep showing the previous parsed result while a new parse is pending —
-  // prevents blank flashes during rapid streaming updates.
-  const deferredPromise = useDeferredValue(parsePromise)
+  useEffect(() => {
+    let active = true
+    const currentRequest = ++requestId.current
+
+    setError(null)
+
+    // Re-parse when content changes and keep showing the previous tree
+    // until the latest request completes.
+    parse(content, { ...options, plugins }).then(
+      (nextTree) => {
+        if (active && currentRequest === requestId.current) {
+          setParsed(nextTree)
+        }
+      },
+      (reason) => {
+        if (active && currentRequest === requestId.current) {
+          setError(reason)
+        }
+      },
+    )
+
+    return () => {
+      active = false
+    }
+  }, [content])
+
+  if (error) {
+    throw error
+  }
+
+  if (!parsed) {
+    return null
+  }
 
   return (
-    <Suspense fallback={null}>
-      <ComarkContent parsePromise={deferredPromise} {...rest} />
-    </Suspense>
+    <ComarkRenderer
+      tree={parsed}
+      {...rest}
+    />
   )
 }

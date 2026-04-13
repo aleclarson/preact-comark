@@ -1,7 +1,11 @@
 import type { ComarkElement, ComarkNode, ComarkTree, ComponentManifest } from 'comark'
-import React, { lazy, Suspense, useMemo } from 'react'
+import { createElement, type ComponentType, type FunctionComponent, type VNode } from 'preact'
+import { lazy, Suspense } from 'preact/compat'
+import { useMemo } from 'preact/hooks'
 import { pascalCase, camelCase } from 'comark/utils'
 import { findLastTextNodeAndAppendNode, getCaret } from '../utils/caret'
+
+type RenderedNode = VNode<any> | string
 
 /**
  * Helper to get tag from a ComarkNode
@@ -66,13 +70,17 @@ function getChildren(node: ComarkNode): ComarkNode[] {
 }
 
 // Cache for dynamically resolved components
-const asyncComponentCache = new Map<string, React.LazyExoticComponent<any>>()
+const asyncComponentCache = new Map<string, ComponentType<any>>()
 
-function resolveComponent(tag: string, components: Record<string, any>, componentsManifest?: ComponentManifest): any {
+function resolveComponent(
+  tag: string,
+  components: Record<string, ComponentType<any>>,
+  componentsManifest?: ComponentManifest,
+): string | ComponentType<any> | undefined {
   const pascalTag = pascalCase(tag)
   const proseTag = `Prose${pascalTag}`
 
-  let resolvedComponent = components[proseTag]
+  let resolvedComponent: ComponentType<any> | undefined = components[proseTag]
     || components[tag]
     || components[pascalTag]
 
@@ -83,7 +91,7 @@ function resolveComponent(tag: string, components: Record<string, any>, componen
     if (!asyncComponentCache.has(cacheKey)) {
       const promise = componentsManifest(tag)
       if (promise) {
-        asyncComponentCache.set(cacheKey, lazy(() => promise as Promise<{ default: React.ComponentType<any> }>))
+        asyncComponentCache.set(cacheKey, lazy(() => promise as Promise<{ default: ComponentType<any> }>))
       }
     }
     resolvedComponent = asyncComponentCache.get(cacheKey)
@@ -93,15 +101,15 @@ function resolveComponent(tag: string, components: Record<string, any>, componen
 }
 
 /**
- * Render a single Comark node to React element
+ * Render a single Comark node to a Preact element
  */
 function renderNode(
   node: ComarkNode,
-  components: Record<string, any> = {},
+  components: Record<string, ComponentType<any>> = {},
   key?: string | number,
   componentsManifest?: ComponentManifest,
   parent?: ComarkNode,
-): React.ReactNode {
+): RenderedNode | null {
   // Handle text nodes (strings)
   if (typeof node === 'string') {
     return node
@@ -186,12 +194,12 @@ function renderNode(
 
     // Handle self-closing tags
     if (['hr', 'br', 'img'].includes(tag)) {
-      return React.createElement(Component, props)
+      return createElement(Component, props)
     }
 
     // Separate template elements (slots) from regular children
-    const slots: Record<string, React.ReactNode[]> = {}
-    const regularChildren: React.ReactNode[] = []
+    const slots: Record<string, RenderedNode[]> = {}
+    const regularChildren: RenderedNode[] = []
 
     for (let i = 0; i < children.length; i++) {
       const child = children[i]
@@ -224,7 +232,7 @@ function renderNode(
           const slotChildren = getChildren(child)
           slots[slotName] = slotChildren
             .map((slotChild: ComarkNode, idx: number) => renderNode(slotChild, components, idx, componentsManifest, node))
-            .filter((slotChild): slotChild is React.ReactNode => slotChild !== null)
+            .filter((slotChild): slotChild is RenderedNode => slotChild !== null)
           continue
         }
       }
@@ -242,7 +250,7 @@ function renderNode(
         slots.default = regularChildren
       }
 
-      // For React, we pass slots as props (React doesn't have named slots like Vue)
+      // Preact custom components receive named slots as regular props.
       const finalProps = { ...props }
       for (const slotName in slots) {
         if (slotName === 'default') {
@@ -261,16 +269,16 @@ function renderNode(
       if (isLazyComponent) {
         return (
           <Suspense key={key} fallback={null}>
-            {React.createElement(Component, finalProps)}
+            {createElement(Component, finalProps)}
           </Suspense>
         )
       }
 
-      return React.createElement(Component, finalProps)
+      return createElement(Component, finalProps)
     }
 
     // For native HTML tags, pass children directly (ignore slot templates)
-    return React.createElement(Component, props, ...regularChildren)
+    return createElement(Component, props, ...regularChildren)
   }
 
   return null
@@ -285,9 +293,9 @@ export interface ComarkRendererProps {
   /**
    * Custom component mappings for element tags
    * Key: tag name (e.g., 'h1', 'p', 'MyComponent')
-   * Value: React component
+   * Value: Preact component
    */
-  components?: Record<string, React.ComponentType<any>>
+  components?: Record<string, ComponentType<any>>
 
   /**
    * Dynamic component resolver function
@@ -315,12 +323,12 @@ export interface ComarkRendererProps {
 /**
  * ComarkRenderer component
  *
- * Renders a Comark tree to React components/HTML.
+ * Renders a Comark tree to Preact components/HTML.
  * Supports custom component mapping for element tags.
  *
  * @example
  * ```tsx
- * import { ComarkRenderer } from '@comark/react'
+ * import { ComarkRenderer } from 'preact-comark'
  * import CustomHeading from './CustomHeading'
  *
  * const customComponents = {
@@ -333,7 +341,7 @@ export interface ComarkRendererProps {
  * }
  * ```
  */
-export const ComarkRenderer: React.FC<ComarkRendererProps> = ({
+export const ComarkRenderer: FunctionComponent<ComarkRendererProps> = ({
   tree,
   components: customComponents = {},
   componentsManifest,
@@ -356,7 +364,7 @@ export const ComarkRenderer: React.FC<ComarkRendererProps> = ({
 
     return nodes
       .map((node, index) => renderNode(node, customComponents, index, componentsManifest))
-      .filter((child): child is React.ReactNode => child !== null)
+      .filter((child): child is RenderedNode => child !== null)
   }, [tree, customComponents, componentsManifest, streaming, caret])
 
   // Wrap in a fragment

@@ -1,14 +1,18 @@
-import React from 'react'
+import type { ComponentChildren, ComponentType } from 'preact'
+import { Suspense } from 'preact/compat'
 import { parse } from 'comark'
-import type { ParseOptions } from 'comark'
+import type { ComarkTree, ComponentManifest, ParseOptions } from 'comark'
 import { ComarkRenderer } from './ComarkRenderer'
 import { ComarkClient } from './ComarkClient'
+
+type ComarkOptions = Omit<ParseOptions, 'plugins'>
+type ComarkPlugins = NonNullable<ParseOptions['plugins']>
 
 export interface ComarkProps {
   /**
    * The children content to parse and render
    */
-  children?: React.ReactNode
+  children?: ComponentChildren
 
   /**
    * The markdown content to parse and render
@@ -18,7 +22,7 @@ export interface ComarkProps {
   /**
    * Parser options (excluding plugins)
    */
-  options?: Exclude<ParseOptions, 'plugins'>
+  options?: ComarkOptions
 
   /**
    * Additional plugins to use
@@ -28,15 +32,15 @@ export interface ComarkProps {
   /**
    * Custom component mappings for element tags
    * Key: tag name (e.g., 'h1', 'p', 'MyComponent')
-   * Value: React component
+   * Value: Preact component
    */
-  components?: Record<string, React.ComponentType<any>>
+  components?: Record<string, ComponentType<any>>
 
   /**
    * Dynamic component resolver function
    * Used to resolve components that aren't in the components map
    */
-  componentsManifest?: (name: string) => Promise<{ default: React.ComponentType<any> }>
+  componentsManifest?: ComponentManifest
 
   /**
    * Enable streaming mode — delegates to ComarkClient for client-side re-rendering
@@ -64,7 +68,7 @@ export interface ComarkProps {
  *
  * @example
  * ```tsx
- * import { Comark } from '@comark/react'
+ * import { Comark } from 'preact-comark'
  * import CustomHeading from './CustomHeading'
  *
  * const customComponents = {
@@ -87,11 +91,97 @@ export interface ComarkProps {
  * }
  * ```
  */
-export async function Comark({
+const EMPTY_OPTIONS: ComarkOptions = {}
+const EMPTY_PLUGINS: ComarkPlugins = []
+
+interface ParseRecord {
+  error?: unknown
+  promise?: Promise<void>
+  tree?: ComarkTree
+}
+
+const parseCache = new Map<string, WeakMap<ComarkOptions, WeakMap<ComarkPlugins, ParseRecord>>>()
+
+function getParseRecord(source: string, options: ComarkOptions, plugins: ComarkPlugins): ParseRecord {
+  let optionsCache = parseCache.get(source)
+  if (!optionsCache) {
+    optionsCache = new WeakMap()
+    parseCache.set(source, optionsCache)
+  }
+
+  let pluginsCache = optionsCache.get(options)
+  if (!pluginsCache) {
+    pluginsCache = new WeakMap()
+    optionsCache.set(options, pluginsCache)
+  }
+
+  let record = pluginsCache.get(plugins)
+  if (!record) {
+    record = {}
+    pluginsCache.set(plugins, record)
+  }
+
+  return record
+}
+
+function readParsedTree(source: string, options: ComarkOptions, plugins: ComarkPlugins): ComarkTree {
+  const record = getParseRecord(source, options, plugins)
+
+  if (record.tree) {
+    return record.tree
+  }
+
+  if (record.error) {
+    throw record.error
+  }
+
+  if (!record.promise) {
+    record.promise = parse(source, { ...options, plugins }).then(
+      (tree) => {
+        record.tree = tree
+      },
+      (error) => {
+        record.error = error
+      },
+    )
+  }
+
+  throw record.promise
+}
+
+interface ResolvedComarkProps extends Omit<ComarkProps, 'children' | 'markdown' | 'streaming' | 'options' | 'plugins'> {
+  options: ComarkOptions
+  plugins: ComarkPlugins
+  source: string
+}
+
+function ResolvedComark({
+  source,
+  options,
+  plugins,
+  components: customComponents = {},
+  componentsManifest,
+  caret = false,
+  className,
+}: ResolvedComarkProps) {
+  const parsed = readParsedTree(source, options, plugins)
+
+  return (
+    <ComarkRenderer
+      tree={parsed}
+      components={customComponents}
+      componentsManifest={componentsManifest}
+      className={className}
+      caret={caret}
+    />
+  )
+}
+
+export function Comark({
   children,
   markdown = '',
-  options = {},
-  plugins = [],
+  options = EMPTY_OPTIONS,
+  plugins = EMPTY_PLUGINS,
   components: customComponents = {},
   componentsManifest,
   streaming = false,
@@ -115,16 +205,17 @@ export async function Comark({
     )
   }
 
-  const parsed = await parse(source, { ...options, plugins })
-
   return (
-    <ComarkRenderer
-      tree={parsed}
-      components={customComponents}
-      componentsManifest={componentsManifest}
-      streaming={streaming}
-      className={className}
-      caret={caret}
-    />
+    <Suspense fallback={null}>
+      <ResolvedComark
+        source={source}
+        options={options}
+        plugins={plugins}
+        components={customComponents}
+        componentsManifest={componentsManifest}
+        className={className}
+        caret={caret}
+      />
+    </Suspense>
   )
 }

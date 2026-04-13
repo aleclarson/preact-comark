@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'preact/hooks'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
