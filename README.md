@@ -30,7 +30,7 @@ export function App() {
 
 ## Documentation Map
 
-- Concepts and API selection: [docs/context.md](/Users/alec/dev/alloc/preact-comark/docs/context.md)
-- Runnable usage patterns: [examples/basic.ts](/Users/alec/dev/alloc/preact-comark/examples/basic.ts), [examples/streaming.ts](/Users/alec/dev/alloc/preact-comark/examples/streaming.ts), [examples/components.ts](/Users/alec/dev/alloc/preact-comark/examples/components.ts)
-- Exact exported signatures: [dist/index.d.mts](/Users/alec/dev/alloc/preact-comark/dist/index.d.mts)
-- Interactive demo: [demo/main.jsx](/Users/alec/dev/alloc/preact-comark/demo/main.jsx)
+- Concepts and API selection: [docs/context.md](./docs/context.md)
+- Runnable usage patterns: [examples/basic.ts](./examples/basic.ts), [examples/streaming.ts](./examples/streaming.ts), [examples/components.ts](./examples/components.ts)
+- Exact exported signatures: [dist/index.d.mts](./dist/index.d.mts)
+- Interactive demo: [demo/main.jsx](./demo/main.jsx)

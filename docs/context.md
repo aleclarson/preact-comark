@@ -60,18 +60,18 @@ The library is intentionally small. The main choice is whether parsing happens i
 - Keep `components`, `options`, and `plugins` stable across renders when possible.
 - Use `Comark` as the main entrypoint and drop down to `ComarkRenderer` only when you already have a tree.
 - Treat `components` keys as part of your authored markdown contract and keep them consistent across apps and content.
-- Use examples in [examples/basic.ts](/Users/alec/dev/alloc/preact-comark/examples/basic.ts), [examples/streaming.ts](/Users/alec/dev/alloc/preact-comark/examples/streaming.ts), and [examples/components.ts](/Users/alec/dev/alloc/preact-comark/examples/components.ts) as the canonical composition patterns.
+- Use examples in [examples/basic.ts](../examples/basic.ts), [examples/streaming.ts](../examples/streaming.ts), and [examples/components.ts](../examples/components.ts) as the canonical composition patterns.
 
 # Patterns to Avoid
 
 - Recreating `options`, `plugins`, or `components` objects inline every render in a streaming view.
 - Writing component-block markdown without matching component registrations.
 - Depending on unpublished deep imports from `src/`.
-- Treating the demo app as the canonical API reference. The reference surface is source TSDoc plus [dist/index.d.mts](/Users/alec/dev/alloc/preact-comark/dist/index.d.mts).
+- Treating the demo app as the canonical API reference. The reference surface is source TSDoc plus [dist/index.d.mts](../dist/index.d.mts).
 
 # Invariants and Constraints
 
-- The published package surface is the package root export described by [dist/index.d.mts](/Users/alec/dev/alloc/preact-comark/dist/index.d.mts).
+- The published package surface is the package root export described by [dist/index.d.mts](../dist/index.d.mts).
 - Named slots are passed as `slot<Name>` props with the first letter capitalized.
 - Default slot content is passed as `children`.
 - Streaming mode optimizes for continuity: the old parsed result stays on screen until the new parse resolves.
