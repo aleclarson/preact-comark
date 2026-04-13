@@ -1,0 +1,63 @@
+{
+  "name": "preact-comark",
+  "version": "0.0.0",
+  "license": "MIT",
+  "author": "Alec Larson",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aleclarson/preact-comark.git"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "examples"
+  ],
+  "type": "module",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "default": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsdown --sourcemap --watch",
+    "build": "tsdown",
+    "demo:dev": "vite --config demo/vite.config.mjs",
+    "demo:build": "vite build --config demo/vite.config.mjs",
+    "format": "oxfmt .",
+    "lint": "oxlint src",
+    "typecheck": "tsc --noEmit && tsc -p test --noEmit",
+    "test": "vitest",
+    "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "beautiful-mermaid": "^1.1.3",
+    "katex": "^0.16.33",
+    "preact": "^10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "beautiful-mermaid": {
+      "optional": true
+    },
+    "katex": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@picocss/pico": "^2.1.1",
+    "@preact/preset-vite": "^2.10.5",
+    "@preact/signals": "^2.9.0",
+    "@types/node": "*",
+    "beautiful-mermaid": "^1.1.3",
+    "katex": "^0.16.33",
+    "oxfmt": "*",
+    "oxlint": "*",
+    "preact": "^10.0.0",
+    "tsdown": "*",
+    "tsnapi": "^0.1.1",
+    "typescript": "*",
+    "vite": "^8.0.8",
+    "vitest": "*"
+  },
+  "dependencies": {
+    "comark": "^0.2.1"
+  }
+}

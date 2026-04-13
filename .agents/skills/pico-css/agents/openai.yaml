@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pico CSS"
+  short_description: "Build semantic UIs with Pico CSS"
+  default_prompt: "Use $pico-css to build or refine a semantic UI with Pico CSS, its variants, and its design tokens."

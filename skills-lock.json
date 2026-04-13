@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "pico-css": {
+      "source": "/Users/alec/dev/skills/packages",
+      "sourceType": "local",
+      "computedHash": "730e06ca69eb08519ca3eb76d2908f9823d9543d2b3cce24166e03f088fc464d"
+    }
+  }
+}
